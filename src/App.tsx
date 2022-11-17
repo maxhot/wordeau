@@ -6,7 +6,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 import './App.css';
-import { useGlobalKeyHandler } from './useGlobalKeyHandler';
+import { useGlobalKeyHandler } from './utils/useGlobalKeyHandler';
 import { isWinningGuess, unusedHintLetters, renderWhen, } from './utils/utils';
 import api, { LetterGuess, ResponseError, GameInfo, LetterState } from "./api"
 import GuessBoard from './components/GuessBoard';

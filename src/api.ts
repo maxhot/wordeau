@@ -1,5 +1,3 @@
-// import fetch from "./fakeFetch";
-
 const HOST = "word.digitalnook.net";
 
 export type GameInfo = {
@@ -49,12 +47,10 @@ export async function guess(payload: GuessPayload): Promise<GuessResponse> {
    const resp = await post(url, payload)
    if (resp.ok) {
       return await resp.json();
-   } else if (resp.status === 400) {
-      // 400 Bad Request - if the word is the wrong length, contains non-letters, or is not in the dictionary
+   } else if (resp.status === 400) { // 400 Bad Request - if the word is the wrong length, contains non-letters, or is not in the dictionary
       console.log("Invalid Word!");
       return ResponseError.INVALID_WORD;
-   } else if (resp.status === 403) {
-      // 403 Forbidden - if the game has been finished, or already has 6 guesses
+   } else if (resp.status === 403) { // 403 Forbidden - if the game has been finished, or already has 6 guesses
       console.log("Game Over!");
       return ResponseError.GAME_OVER;
    }
