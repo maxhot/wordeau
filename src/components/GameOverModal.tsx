@@ -6,25 +6,35 @@ const Wrapper = styled.div`
    left: 0;
    width: 100vw;
    height: 100vh;
-   background: white;
    display: grid;
    place-items: center;
+
+   background: hsla(0deg, 0%, 100%, 0.9 );
+   @supports (backdrop-filter: blur(8px)) {
+      background: hsla(0deg, 0%, 100%, 0.6);
+      backdrop-filter: blur(6px); 
+   }
 `
 
 const Modal = styled.div`
    box-sizing: border-box;
    width: 20rem;
    height: 20rem;
-   border: 1px solid black;
+   border: 2px solid grey;
    display: grid;
    place-content: center;
    background: white;
    padding-bottom: 2rem;
+   border-radius: 1rem;
 `
 
 const Button = styled.button`
    min-height: 44px;
    font-size: larger;
+`
+
+const Answer = styled.span`
+   color: green;
 `
 export default function GameOverModal({ newGame, answer }: {
    newGame: () => void
@@ -33,7 +43,7 @@ export default function GameOverModal({ newGame, answer }: {
    return <Wrapper>
       <Modal>
          <h1>Game Over</h1>
-         <h2>Answer: {answer || '???'}</h2>
+         <h2>Answer: <Answer>{answer || '???'}</Answer></h2>
          <Button onClick={newGame}>New Game</Button>
       </Modal>
 

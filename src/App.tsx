@@ -5,7 +5,6 @@ import styled, { createGlobalStyle } from 'styled-components';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-import './App.css';
 import { useGlobalKeyHandler } from './utils/useGlobalKeyHandler';
 import { isWinningGuess, unusedHintLetters, renderWhen, } from './utils/utils';
 import api, { LetterGuess, ResponseError, GameInfo, LetterState } from "./api"
@@ -20,7 +19,8 @@ export type LetterPositionHints = Map<number, string>
 const GlobalStyles = createGlobalStyle`
    body {
       /* background color to indicate hard mode */
-      background-color: ${(props: { isHardMode: boolean }) => props.isHardMode ? "hsl(0, 0%, 90%)" : "white"} 
+      background-color: ${(props: { isHardMode: boolean }) => props.isHardMode ? "hsl(0, 0%, 90%)" : "white"} ;
+      text-align: center;
    }
 `
 const Title = styled.h1`

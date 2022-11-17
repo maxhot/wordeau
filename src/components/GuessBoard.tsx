@@ -10,7 +10,7 @@ const Wrapper = styled.div`
    flex-direction: column;
    align-items: center;
    gap: .5rem; 
-   margin: 2rem 0
+   margin: 2rem 0;
 `
 function GuessBoard({ guesses, buffer }: {
    guesses: LetterGuess[][], buffer: string
