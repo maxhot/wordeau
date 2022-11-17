@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 // 3rd party
 import styled, { createGlobalStyle } from 'styled-components';
@@ -7,8 +7,8 @@ import 'react-toastify/dist/ReactToastify.css';
 
 import './App.css';
 import { useGlobalKeyHandler } from './useGlobalKeyHandler';
-import { isWinningGuess, missingHintLetters, renderWhen, } from './utils/utils';
-import api, { LetterResponse, ErrorResponse, GameInfo, LetterState } from "./api"
+import { isWinningGuess, unusedHintLetters, renderWhen, } from './utils/utils';
+import api, { LetterGuess, ResponseError, GameInfo, LetterState } from "./api"
 import GuessBoard from './components/GuessBoard';
 import KeyboardHints from './components/KeyboardHints';
 import GameOverModal from './components/GameOverModal';
@@ -19,16 +19,20 @@ export type LetterPositionHints = Map<number, string>
 
 const GlobalStyles = createGlobalStyle`
    body {
+      /* background color to indicate hard mode */
       background-color: ${(props: { isHardMode: boolean }) => props.isHardMode ? "hsl(0, 0%, 90%)" : "white"} 
    }
+`
+const Title = styled.h1`
+   color: hsl(0, 0%, 20%);
 `
 
 function App() {
    const [gameInfo, setGameInfo] = useState<GameInfo | null>(null)
    const [buffer, setBuffer] = useState("");
-   const [guesses, setGuesses] = useState<LetterResponse[][]>([]);
-   const [letterHints, setLetterHints] = useState<LetterHints>(new Map()) // letter hints
-   const [positionHints, setPositionHints] = useState<LetterPositionHints>(new Map()) // letter hints
+   const [guesses, setGuesses] = useState<LetterGuess[][]>([]);
+   const [letterHints, setLetterHints] = useState<LetterHints>(new Map())
+   const [positionHints, setPositionHints] = useState<LetterPositionHints>(new Map())
    const [answer, setAnswer] = useState<string | null>(null)
 
    const [isHardMode, setIsHardMode] = useState(true);
@@ -46,16 +50,8 @@ function App() {
       setAnswer(null)
    }
 
-   // game over if 1) 6 guesses have been made or 2) last guess had all correct
-   const isGameOver = React.useMemo(() => {
-      // Even if we have 6 guesses, we don't want to show the game over screen until we get the answer from the server
-      // if (guesses.length === 6) return true;
-      if (answer) return true
-      if (guesses.length > 0) {
-         return isWinningGuess(guesses[guesses.length - 1])
-      }
-      return false
-   }, [guesses, answer])
+   // consider the game over once we have the answer
+   const isGameOver = answer !== null
 
    useEffect(() => {
       newGame()
@@ -65,9 +61,9 @@ function App() {
       (async () => {
          if (!gameInfo) return
          if (isGameOver) return // disallow guess submissions after game over
-         // TODO: add waiting state
+
          if (isHardMode) {
-            const missingLetters = missingHintLetters(buffer, letterHints, positionHints)
+            const missingLetters = unusedHintLetters(buffer, letterHints, positionHints)
             if (missingLetters.length > 0) {
                toast.error(`Missing Letters: (${missingLetters.join(", ")})`, {
                   autoClose: 3000,
@@ -80,15 +76,14 @@ function App() {
             key: gameInfo.key,
             guess: buffer
          })
-         if (guessResponse === ErrorResponse.InvalidWord) {
+         if (guessResponse === ResponseError.INVALID_WORD) {
             toast.error("Invalid Word!")
             return
-         } else if (guessResponse === ErrorResponse.GameOver) {
+         } else if (guessResponse === ResponseError.GAME_OVER) {
             toast.error("Game Already Over")
             return
          }
 
-         // setGuesses(guesses => ([...guesses, (guessResponse as LetterResponse[])]))
          // clear buffer after each guess
          setBuffer("")
 
@@ -101,8 +96,6 @@ function App() {
             })
             return newLetterHints
          })
-
-         // update position hints
          setPositionHints(positionHints => {
             const newHints = new Map(positionHints)
             guessResponse.forEach(({ letter, state }, idx) => {
@@ -114,6 +107,7 @@ function App() {
 
          setGuesses((guesses) => [...guesses, guessResponse]);
 
+         // Is the game over?
          if (isWinningGuess(guessResponse)) {
             setAnswer(guessResponse.map(({ letter }) => letter).join(""))
          }
@@ -161,10 +155,5 @@ function App() {
       </div>)
    );
 }
-
-const Title = styled.h1`
-   color: hsl(0, 0%, 20%);
-`
-
 
 export default App;

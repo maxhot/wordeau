@@ -7,7 +7,6 @@ const Wrapper = styled.div`
    width: 100vw;
    height: 100vh;
    background: white;
-   /* opacity: 70%; */
    display: grid;
    place-items: center;
 `

@@ -47,13 +47,11 @@ const Wrapper = styled.div`
    gap: .5rem;
 `
 
-const keyboardRows: string[][] = ["qwertyuiop", "asdfghjkl", "zxcvbnm"].map(letters => letters.split(""))
+const keyboardLetterRows: string[][] = ["qwertyuiop", "asdfghjkl", "zxcvbnm"].map(letters => letters.split(""))
 
-// given hints, display keyboard-like rows of letters indicating state of each key:
-// 0, 1, 2, undefined
 function KeyboardHints({ letterHints }: { letterHints: LetterHints }) {
    return <Wrapper>{
-      keyboardRows.map((letters: string[], i) => (
+      keyboardLetterRows.map((letters: string[], i) => (
          <KeyRow key={i}>
             {letters.map((letter: string, j) => (
                <LetterTile key={letter} state={letterHints.get(letter) ?? null}> {letter} </LetterTile>

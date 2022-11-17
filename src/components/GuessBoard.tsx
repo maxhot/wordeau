@@ -1,5 +1,5 @@
 import styled from 'styled-components'
-import { LetterResponse } from '../api'
+import { LetterGuess } from '../api'
 import { KeyRow, LetterTile } from './KeyboardHints'
 
 // Empty 6 x 5 tiles
@@ -13,7 +13,7 @@ const Wrapper = styled.div`
    margin: 2rem 0
 `
 function GuessBoard({ guesses, buffer }: {
-   guesses: LetterResponse[][], buffer: string
+   guesses: LetterGuess[][], buffer: string
 }) {
    return <Wrapper>{
       emptyBoard.map((rowTiles, rowIdx) => {
