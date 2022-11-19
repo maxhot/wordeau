@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 
-export function useGlobalKeyHandler(handler) {
+export function useGlobalKeyHandler(handler: (e: KeyboardEvent) => void) {
    useEffect(() => {
       window.addEventListener("keydown", handler);
       return () => {

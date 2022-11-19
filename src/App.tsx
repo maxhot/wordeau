@@ -1,12 +1,11 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
-// 3rd party
 import styled, { createGlobalStyle } from 'styled-components';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-import { useGlobalKeyHandler } from './utils/useGlobalKeyHandler';
-import { isWinningGuess, unusedHintLetters, renderWhen, } from './utils/utils';
+import { useGlobalKeyHandler } from './misc/useGlobalKeyHandler';
+import { isWinningGuess, unusedHintLetters, renderWhen, } from './misc/misc';
 import api, { LetterGuess, ResponseError, GameInfo, LetterState } from "./api"
 import GuessBoard from './components/GuessBoard';
 import KeyboardHints from './components/KeyboardHints';
@@ -27,11 +26,17 @@ const Title = styled.h1`
    color: hsl(0, 0%, 20%);
 `
 
+
+/**
+ * Wordeau Game Main app
+ */
 function App() {
    const [gameInfo, setGameInfo] = useState<GameInfo | null>(null)
    const [buffer, setBuffer] = useState("");
    const [guesses, setGuesses] = useState<LetterGuess[][]>([]);
+
    const [letterHints, setLetterHints] = useState<LetterHints>(new Map())
+   // used only for hard mode to determine correct positions
    const [positionHints, setPositionHints] = useState<LetterPositionHints>(new Map())
    const [answer, setAnswer] = useState<string | null>(null)
 
@@ -50,9 +55,10 @@ function App() {
       setAnswer(null)
    }
 
-   // consider the game over once we have the answer
+   // We consider the game over once we have the answer
    const isGameOver = answer !== null
 
+   // start new game immediately on mount
    useEffect(() => {
       newGame()
    }, [])
@@ -71,6 +77,7 @@ function App() {
                return
             }
          }
+         // BUGBUG: could fire twice on Enter Enter
          const guessResponse = await api.guess({
             id: gameInfo.id,
             key: gameInfo.key,
@@ -121,12 +128,15 @@ function App() {
 
 
    const handleKeydown = useCallback((event) => {
-      if (isGameOver) return;
       if (event.key === "Enter") {
+         if (isGameOver) {
+            newGame();
+            return;
+         }
          if (buffer.length < 5) return; // not enough characters to submit guess
-
          handleSubmitGuess();
       }
+      if (isGameOver) return;
       if (event.key === "Backspace") {
          setBuffer((buffer) => buffer.slice(0, -1));
       } else if (event.key >= "a" && event.key <= "z") {

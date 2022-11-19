@@ -1,3 +1,5 @@
+import { ChangeEvent } from "react";
+
 import styled from "styled-components";
 
 const DifficultySelect = styled.select`
@@ -6,14 +8,13 @@ const DifficultySelect = styled.select`
    padding: .25rem .5rem;
    margin: 0 .5rem;
 `
-
 const Label = styled.label`
    font-size: larger;
 `
 
 export function DifficultySelection({ isHardMode, setIsHardMode }) {
 
-   function handleChange(event) {
+   function handleChange(event: ChangeEvent<HTMLSelectElement>) {
       switch (event.target.value) {
          case "normal_mode":
             setIsHardMode(false);

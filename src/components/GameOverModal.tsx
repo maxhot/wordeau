@@ -1,5 +1,14 @@
-import styled from "styled-components"
+import styled, { keyframes } from "styled-components"
+import { required } from "../misc/misc"
 
+const fadeIn = keyframes`
+   from {
+      opacity: 0%
+   }
+   to {
+      opacity: 100%;
+   }
+`
 const Wrapper = styled.div`
    position: fixed;
    top: 0;
@@ -14,38 +23,40 @@ const Wrapper = styled.div`
       background: hsla(0deg, 0%, 100%, 0.6);
       backdrop-filter: blur(6px); 
    }
+
+   animation: ${fadeIn} 2s both;
 `
 
 const Modal = styled.div`
    box-sizing: border-box;
+   display: grid;
+   place-content: center;
    width: 20rem;
    height: 20rem;
    border: 2px solid grey;
-   display: grid;
-   place-content: center;
+   border-radius: 1rem;
    background: white;
    padding-bottom: 2rem;
-   border-radius: 1rem;
 `
-
 const Button = styled.button`
    min-height: 44px;
    font-size: larger;
 `
-
 const Answer = styled.span`
    color: green;
 `
-export default function GameOverModal({ newGame, answer }: {
+
+export default function GameOverModal({ newGame, answer = (required() as any) }: {
    newGame: () => void
    answer: string | null
 }) {
    return <Wrapper>
       <Modal>
          <h1>Game Over</h1>
-         <h2>Answer: <Answer>{answer || '???'}</Answer></h2>
+
+         { /* Note: we should only be displaying this modal when answer is known */}
+         <h2>Answer: <Answer>{answer || 'Unknown'}</Answer></h2>
          <Button onClick={newGame}>New Game</Button>
       </Modal>
-
    </Wrapper>
 }
