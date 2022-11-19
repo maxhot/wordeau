@@ -1,9 +1,9 @@
 import { ReactElement } from "react"
 import { LetterGuess, LetterState } from "../api"
-import { LetterHints, LetterPositionHints } from "../App"
+import { HintsByLetter, HintsByCorrectPosition } from "../App"
 
 export function renderWhen(condition: unknown, component: ReactElement) {
-   return condition ? component : null
+   return Boolean(condition) ? component : null
 }
 
 export function required() {
@@ -21,8 +21,8 @@ export function required() {
 // TODO: consider move to file `gameLogic.ts` OR `hardMode.ts`
 export function unusedHintLetters(
    buffer: string,
-   letterHints: LetterHints,
-   positionHints: LetterPositionHints,
+   letterHints: HintsByLetter,
+   positionHints: HintsByCorrectPosition,
 ): string[] {
    const missingLetters: string[] = []
    // count present letters

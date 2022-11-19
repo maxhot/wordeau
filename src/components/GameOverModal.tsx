@@ -1,4 +1,5 @@
 import styled, { keyframes } from "styled-components"
+
 import { required } from "../misc/misc"
 
 const fadeIn = keyframes`
@@ -54,9 +55,8 @@ export default function GameOverModal({ newGame, answer = (required() as any) }:
       <Modal>
          <h1>Game Over</h1>
 
-         { /* Note: we should only be displaying this modal when answer is known */}
          <h2>Answer: <Answer>{answer || 'Unknown'}</Answer></h2>
-         <Button onClick={newGame}>New Game (Enter)</Button>
+         <Button onClick={() => newGame()}>New Game [Enter]</Button>
       </Modal>
    </Wrapper>
 }

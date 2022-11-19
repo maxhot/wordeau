@@ -1,7 +1,7 @@
 import React from 'react'
 import styled from 'styled-components';
 import { LetterState } from '../api';
-import { LetterHints } from '../App';
+import { HintsByLetter } from '../App';
 
 
 export function state2cssColor(state: LetterState | null): string {
@@ -49,7 +49,7 @@ const Wrapper = styled.div`
 
 const keyboardLetterRows: string[][] = ["qwertyuiop", "asdfghjkl", "zxcvbnm"].map(letters => letters.split(""))
 
-function KeyboardHints({ letterHints }: { letterHints: LetterHints }) {
+function KeyboardHints({ letterHints }: { letterHints: HintsByLetter }) {
    return <Wrapper>{
       keyboardLetterRows.map((letters: string[], i) => (
          <KeyRow key={i}>
