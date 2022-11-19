@@ -42,6 +42,15 @@ function App() {
 
    const [isHardMode, setIsHardMode] = useState(true);
 
+   // use counter as mutex to prevent multiple simultaneous API calls
+   // (e.g. without this we may allow user to submit multiple guesses before 
+   // get a single response)
+   // this could be a custom hook useRefCounter
+   const apiCallCounterRef = useRef(0)
+   const incrementCounter = () => { apiCallCounterRef.current += 1 }
+   const decrementCounter = () => { apiCallCounterRef.current -= 1 }
+   const getApiCallCount = () => apiCallCounterRef.current
+
    async function newGame() {
       const gameInfo = await api.startGame()
       console.log("New game started!", gameInfo)
@@ -67,6 +76,10 @@ function App() {
       (async () => {
          if (!gameInfo) return
          if (isGameOver) return // disallow guess submissions after game over
+         if (getApiCallCount() > 0) {
+            console.warn("Submission Blocked")
+            return // block submissions when one is already in progress
+         }
 
          if (isHardMode) {
             const missingLetters = unusedHintLetters(buffer, letterHints, positionHints)
@@ -78,50 +91,56 @@ function App() {
             }
          }
          // BUGBUG: could fire twice on Enter Enter
-         const guessResponse = await api.guess({
-            id: gameInfo.id,
-            key: gameInfo.key,
-            guess: buffer
-         })
-         if (guessResponse === ResponseError.INVALID_WORD) {
-            toast.error("Invalid Word!")
-            return
-         } else if (guessResponse === ResponseError.GAME_OVER) {
-            toast.error("Game Already Over")
-            return
-         }
 
-         // clear buffer after each guess
-         setBuffer("")
-
-         // update hints
-         setLetterHints(letterHints => {
-            const newLetterHints = new Map(letterHints)
-            guessResponse.forEach(({ letter, state }) => {
-               if (state > (newLetterHints.get(letter) ?? -1))
-                  newLetterHints.set(letter, state) // no downgrading of hints (e.g. 2 -> 1 is not allowed)
+         incrementCounter()
+         try {
+            const guessResponse = await api.guess({
+               id: gameInfo.id,
+               key: gameInfo.key,
+               guess: buffer
             })
-            return newLetterHints
-         })
-         setPositionHints(positionHints => {
-            const newHints = new Map(positionHints)
-            guessResponse.forEach(({ letter, state }, idx) => {
-               if (state === LetterState.CORRECT)
-                  newHints.set(idx, letter)
+            if (guessResponse === ResponseError.INVALID_WORD) {
+               toast.error("Invalid Word!")
+               return
+            } else if (guessResponse === ResponseError.GAME_OVER) {
+               toast.error("Game Already Over")
+               return
+            }
+
+            // clear buffer after each guess
+            setBuffer("")
+
+            // update hints
+            setLetterHints(letterHints => {
+               const newLetterHints = new Map(letterHints)
+               guessResponse.forEach(({ letter, state }) => {
+                  if (state > (newLetterHints.get(letter) ?? -1))
+                     newLetterHints.set(letter, state) // no downgrading of hints (e.g. 2 -> 1 is not allowed)
+               })
+               return newLetterHints
             })
-            return newHints
-         })
+            setPositionHints(positionHints => {
+               const newHints = new Map(positionHints)
+               guessResponse.forEach(({ letter, state }, idx) => {
+                  if (state === LetterState.CORRECT)
+                     newHints.set(idx, letter)
+               })
+               return newHints
+            })
 
-         setGuesses((guesses) => [...guesses, guessResponse]);
+            setGuesses((guesses) => [...guesses, guessResponse]);
 
-         // Is the game over?
-         if (isWinningGuess(guessResponse)) {
-            setAnswer(guessResponse.map(({ letter }) => letter).join(""))
-         }
-         else if (guesses.length === 5) {
-            // out of guesses; fetch answer
-            const { answer } = await api.finishGame({ id: gameInfo.id, key: gameInfo.key })
-            setAnswer(answer)
+            // Is the game over?
+            if (isWinningGuess(guessResponse)) {
+               setAnswer(guessResponse.map(({ letter }) => letter).join(""))
+            }
+            else if (guesses.length === 5) {
+               // out of guesses; fetch answer
+               const { answer } = await api.finishGame({ id: gameInfo.id, key: gameInfo.key })
+               setAnswer(answer)
+            }
+         } finally {
+            decrementCounter()
          }
       })()
    }, [setGuesses, buffer, gameInfo, isHardMode, letterHints, positionHints, guesses, isGameOver])
