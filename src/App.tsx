@@ -15,6 +15,8 @@ import { DifficultySelection } from './components/DifficultySelection';
 export type LetterHints = Map<string, LetterState>
 export type LetterPositionHints = Map<number, string>
 
+const WORD_LEN = 5;
+
 const GlobalStyles = createGlobalStyle`
    body {
       /* background color to indicate hard mode */
@@ -35,8 +37,10 @@ function App() {
    const [buffer, setBuffer] = useState("");
    const [guesses, setGuesses] = useState<LetterGuess[][]>([]);
 
+   // Used to show hints in keyboard layout
    const [letterHints, setLetterHints] = useState<LetterHints>(new Map())
-   // used only for hard mode to determine correct positions
+
+   // Used for hard mode to determine correct positions:
    const [positionHints, setPositionHints] = useState<LetterPositionHints>(new Map())
    const [answer, setAnswer] = useState<string | null>(null)
 
@@ -51,31 +55,35 @@ function App() {
    const decrementCounter = () => { apiCallCounterRef.current -= 1 }
    const getApiCallCount = () => apiCallCounterRef.current
 
-   async function newGame() {
-      const gameInfo = await api.startGame()
-      console.log("New game started!", gameInfo)
-      setGameInfo(gameInfo)
+   /**
+    * Resets game state and starts a new game
+    */
+   const newGame = useCallback(() => {
+      (async function () {
+         const gameInfo = await api.startGame()
+         console.log("New game started!", gameInfo)
+         setGameInfo(gameInfo)
 
-      // reset game states
-      setBuffer("");
-      setGuesses([]);
-      setLetterHints(new Map())
-      setPositionHints(new Map())
-      setAnswer(null)
-   }
-
-   // We consider the game over once we have the answer
-   const isGameOver = answer !== null
-
-   // start new game immediately on mount
-   useEffect(() => {
-      newGame()
+         // reset game states
+         setBuffer("");
+         setGuesses([]);
+         setLetterHints(new Map())
+         setPositionHints(new Map())
+         setAnswer(null)
+      })()
    }, [])
 
-   const handleSubmitGuess = useCallback(() => {
-      (async () => {
+   // Start new game immediately on mount
+   useEffect(() => {
+      newGame()
+      // ^ should not run more than once per game since our only dependency (newGame) is constant
+   }, [newGame])
+
+   const isGameOver = answer !== null
+
+   const handleSubmitGuess = useCallback((buffer: string) => {
+      (async function () {
          if (!gameInfo) return
-         if (isGameOver) return // disallow guess submissions after game over
          if (getApiCallCount() > 0) {
             console.warn("Submission Blocked")
             return // block submissions when one is already in progress
@@ -90,7 +98,6 @@ function App() {
                return
             }
          }
-         // BUGBUG: could fire twice on Enter Enter
 
          incrementCounter()
          try {
@@ -143,27 +150,25 @@ function App() {
             decrementCounter()
          }
       })()
-   }, [setGuesses, buffer, gameInfo, isHardMode, letterHints, positionHints, guesses, isGameOver])
-
+   }, [gameInfo, guesses.length, isHardMode, letterHints, positionHints])
 
    const handleKeydown = useCallback((event) => {
-      if (event.key === "Enter") {
-         if (isGameOver) {
+      if (isGameOver) {
+         if (event.key === 'Enter') {
             newGame();
-            return;
          }
-         if (buffer.length < 5) return; // not enough characters to submit guess
-         handleSubmitGuess();
+         return;
       }
-      if (isGameOver) return;
-      if (event.key === "Backspace") {
+      else if (event.key === "Enter" && buffer.length === WORD_LEN) {
+         handleSubmitGuess(buffer);
+      }
+      else if (event.key === "Backspace" && buffer.length > 0) {
          setBuffer((buffer) => buffer.slice(0, -1));
-      } else if (event.key >= "a" && event.key <= "z") {
-         // if already guessed all 5 chars then do nothing
-         if (buffer.length >= 5) return;
+      }
+      else if (event.key >= "a" && event.key <= "z" && buffer.length < WORD_LEN) {
          setBuffer((buffer) => buffer + event.key);
       }
-   }, [isGameOver, handleSubmitGuess, setBuffer, buffer.length])
+   }, [isGameOver, buffer, handleSubmitGuess, newGame])
 
    useGlobalKeyHandler(handleKeydown)
 

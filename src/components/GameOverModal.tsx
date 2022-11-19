@@ -56,7 +56,7 @@ export default function GameOverModal({ newGame, answer = (required() as any) }:
 
          { /* Note: we should only be displaying this modal when answer is known */}
          <h2>Answer: <Answer>{answer || 'Unknown'}</Answer></h2>
-         <Button onClick={newGame}>New Game</Button>
+         <Button onClick={newGame}>New Game (Enter)</Button>
       </Modal>
    </Wrapper>
 }
