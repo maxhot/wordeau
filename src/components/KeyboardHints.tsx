@@ -1,8 +1,8 @@
 import React from 'react'
 import styled from 'styled-components';
+
 import { LetterState } from '../api';
 import { HintsByLetter } from '../App';
-
 
 export function state2cssColor(state: LetterState | null): string {
    switch (state) {
@@ -32,6 +32,8 @@ export const LetterTile = React.memo(styled.article`
    min-width: 3rem;
    min-height: 3rem;
    color: hsl(0, 0%, 30%);
+
+   user-select: none;   /* don't let user select letters */
 `)
 
 export const KeyRow = React.memo(styled.div`
@@ -54,7 +56,9 @@ function KeyboardHints({ letterHints }: { letterHints: HintsByLetter }) {
       keyboardLetterRows.map((letters: string[], i) => (
          <KeyRow key={i}>
             {letters.map((letter: string, j) => (
-               <LetterTile key={letter} state={letterHints.get(letter) ?? null}> {letter} </LetterTile>
+
+               // while it's usually frowned upon to use index number as key, in this case we know the index is guaranteed to be unique because the keyboard is hard-coded and fixed 
+               <LetterTile key={j} state={letterHints.get(letter) ?? null}> {letter} </LetterTile>
             ))}
          </KeyRow>
       ))

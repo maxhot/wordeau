@@ -4,10 +4,16 @@ import { required } from "../misc/misc"
 
 const fadeIn = keyframes`
    from {
-      opacity: 0%
+      opacity: 0%;
+      @supports (backdrop-filter: blur(8px)) { 
+         backdrop-filter: blur(0);
+      }
    }
    to {
       opacity: 100%;
+      @supports (backdrop-filter: blur(8px)) { 
+         backdrop-filter: blur(6px);
+      }
    }
 `
 const Wrapper = styled.div`
@@ -25,10 +31,10 @@ const Wrapper = styled.div`
       backdrop-filter: blur(6px); 
    }
 
-   animation: ${fadeIn} 2s both;
+   animation: ${fadeIn} .5s ease-out both;
 `
 
-const Modal = styled.div`
+const ModalPane = styled.div`
    box-sizing: border-box;
    display: grid;
    place-content: center;
@@ -38,6 +44,9 @@ const Modal = styled.div`
    border-radius: 1rem;
    background: white;
    padding-bottom: 2rem;
+
+   /* TODO: animate appearance of this modal */
+
 `
 const Button = styled.button`
    min-height: 44px;
@@ -52,11 +61,11 @@ export default function GameOverModal({ newGame, answer = (required() as any) }:
    answer: string | null
 }) {
    return <Wrapper>
-      <Modal>
+      <ModalPane>
          <h1>Game Over</h1>
 
          <h2>Answer: <Answer>{answer || 'Unknown'}</Answer></h2>
          <Button onClick={() => newGame()}>New Game [Enter]</Button>
-      </Modal>
+      </ModalPane>
    </Wrapper>
 }
