@@ -13,6 +13,7 @@ import GuessBoard from './components/GuessBoard';
 import KeyboardHints from './components/KeyboardHints';
 import GameOverModal from './components/GameOverModal';
 import { DifficultySelection } from './components/DifficultySelection';
+import { useMutex } from './misc/useMutex';
 
 export type HintsByLetter = Map<string, LetterState>
 export type HintsByCorrectPosition = Map<number, string>
@@ -53,12 +54,8 @@ function App() {
    const [isHardMode, setIsHardMode] = useLocalStorage<boolean>(storeKey("isHardMode"), true);
 
    const [buffer, setBuffer] = useState("");
-   const resetStates = useCallback(() => {
-      // reset game states
-      setBuffer("");
-      setLocalGuesses([]);
-      setLocalAnswer(null)
-   }, [setLocalAnswer, setLocalGuesses])
+   // Prevent multiple simultaneous API calls with a semaphore
+   const mutex = useMutex()
 
    /**
     * Resets game state and starts a new game
@@ -115,7 +112,7 @@ function App() {
    const handleSubmitGuess = useCallback((buffer: string) => {
       (async function () {
          if (!gameInfo) return
-         if (getApiCallCount() > 0) {
+         if (mutex.isLocked()) {
             console.warn("Submission Blocked")
             return // block submissions when one is already in progress
          }
@@ -131,8 +128,7 @@ function App() {
             }
          }
 
-         incrementCounter()
-         try {
+         mutex.runProtected(async () => {
             const guessResponse = await api.guess({
                id: gameInfo.id,
                key: gameInfo.key,
@@ -162,11 +158,9 @@ function App() {
                const { answer } = await api.finishGame({ id: gameInfo.id, key: gameInfo.key })
                setLocalAnswer(answer)
             }
-         } finally {
-            decrementCounter()
-         }
+         })
       })()
-   }, [gameInfo, guesses.length, isHardMode, letterHints, positionHints, setLocalAnswer, setLocalGuesses])
+   }, [gameKeys, guesses.length, isHardMode, letterHints, mutex, positionHints, setAnswers, setGuesses])
 
    const handleKeydown = useCallback((event) => {
       if (isGameOver) {
