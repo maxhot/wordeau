@@ -1,8 +1,7 @@
 import React from 'react'
 import styled from 'styled-components';
 
-import { LetterState } from '../api';
-import { HintsByLetter } from '../App';
+import { HintsByLetter, LetterState } from '../misc/types';
 
 export function state2cssColor(state: LetterState | null): string {
    switch (state) {

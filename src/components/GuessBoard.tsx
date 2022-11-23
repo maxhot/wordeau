@@ -1,5 +1,5 @@
 import styled from 'styled-components'
-import { LetterGuess } from '../api'
+import { LetterGuess } from '../misc/types'
 import { KeyRow, LetterTile } from './KeyboardHints'
 
 // Empty 6 x 5 tiles

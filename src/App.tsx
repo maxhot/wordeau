@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 
 import styled, { createGlobalStyle } from 'styled-components';
 import { ToastContainer, toast } from 'react-toastify';
@@ -8,18 +8,17 @@ import assert from 'tiny-invariant'
 
 import { useGlobalKeyHandler } from './misc/useGlobalKeyHandler';
 import { isWinningGuess, unusedHintLetters, renderWhen, } from './misc/misc';
-import api, { LetterGuess, ResponseError, GameInfo, LetterState } from "./api"
+import api from "./api"
 import GuessBoard from './components/GuessBoard';
 import KeyboardHints from './components/KeyboardHints';
 import GameOverModal from './components/GameOverModal';
 import { DifficultySelection } from './components/DifficultySelection';
 import { useMutex } from './misc/useMutex';
+import { GameIdKeys, HintsByCorrectPosition, HintsByLetter, LetterGuess, LetterState, ResponseError } from './misc/types';
 
-export type HintsByLetter = Map<string, LetterState>
-export type HintsByCorrectPosition = Map<number, string>
-
-const VERSION = "0.1.2"
+const VERSION = "0.1.3"
 const WORD_LEN = 5;
+// local storage key
 const STORAGE_KEY = `wordeau--${VERSION}`
 
 const GlobalStyles = createGlobalStyle`
@@ -33,7 +32,7 @@ const Title = styled.h1`
    color: hsl(0, 0%, 20%);
 `
 
-function storeKey(key: string) {
+function localKey(key: string) {
    return `${STORAGE_KEY}:${key}`
 }
 
@@ -41,49 +40,57 @@ function storeKey(key: string) {
  * Wordeau Game Main app
  */
 function App() {
-   /**
-    * States we want to persist across sessions:
-    * - gameInfo - this lets us continue a game we started earlier
-    * - guesses - ditto
-    * - answer - lets us continue from end game
-    * - isHardMode - save our difficulty preference across sessions
-    */
-   const [gameInfo, setLocalGameInfo] = useLocalStorage<GameInfo | null>(storeKey("gameInfo"), null)
-   const [guesses, setLocalGuesses] = useLocalStorage<LetterGuess[][]>(storeKey("guesses"), []);
-   const [answer, setLocalAnswer] = useLocalStorage<string | null>(storeKey("answer"), null)
-   const [isHardMode, setIsHardMode] = useLocalStorage<boolean>(storeKey("isHardMode"), true);
+   // These states persist across sessions:
+   const [gameIdKeys, setGameIdKeys] = useLocalStorage<GameIdKeys | null>(localKey("gameIdKeys"), null)
+   const [guesses, setGuesses] = useLocalStorage<LetterGuess[][]>(localKey("guesses"), []);
+   const [answer, setAnswers] = useLocalStorage<string | null>(localKey("answer"), null)
+   const [isHardMode, setIsHardMode] = useLocalStorage<boolean>(localKey("isHardMode"), true);
 
+   // These states DO NOT persist across sessions
    const [buffer, setBuffer] = useState("");
    // Prevent multiple simultaneous API calls with a semaphore
    const mutex = useMutex()
 
-   /**
-    * Resets game state and starts a new game
-    */
+   // Resets game state and starts a new game
    const resetNewGame = useCallback(() => {
       (async function () {
          const gameInfo = await api.startGame()
          console.log("New game started!", gameInfo)
 
-         resetStates();
-         setLocalGameInfo(gameInfo)
+         // reset game states
+         setBuffer("");
+         setGuesses([]);
+         setAnswers(null)
+
+         setGameIdKeys(gameInfo)
       })()
-   }, [resetStates, setLocalGameInfo])
+   }, [setAnswers, setGameIdKeys, setGuesses]) // these should all be constant through the life of this component
 
+   // Start new game if no existing game in progress
+   useEffect(() => {
+      if (!gameIdKeys)
+         resetNewGame()
+   }, [gameIdKeys, resetNewGame])
 
-   // Prove state is what we expect
-   assert(Array.isArray(guesses), "guesses should always be an array")
+   // prove assumptions
+   assert(Array.isArray(guesses), "Guesses should always be an Array...")
    assert(answer === null || typeof answer === 'string', "Answer shud be null or string")
 
-   // Derive hints from guesses
+   // Derive all hints from guesses so far
    const [letterHints, positionHints]: [HintsByLetter, HintsByCorrectPosition] = useMemo(() => {
       const letterHints: HintsByLetter = new Map();
       const positionHints: HintsByCorrectPosition = new Map();
+
       guesses.forEach((guess) => {
          guess.forEach(({ letter, state }, idx) => {
-            if (state > (letterHints.get(letter) ?? -1))
-               letterHints.set(letter, state) // prevent downgrading of hints (e.g. 2 -> 1 is not allowed)
+            // find the best hint for each letter
+            if (state > (letterHints.get(letter) ?? -1
+               // Default to -1 just so state of 0 has something to be greater than
+               // Keep only the strongest hint per letter. I.e. we should prevent downgrading of hints (e.g. if user gets 2 (CORRECT) first but then guesses the same letter and gets a 1 (PRESENT), we keep only the 2 because it's the stronger hint
+            ))
+               letterHints.set(letter, state)
 
+            // collect all known correct letter positions
             if (state === LetterState.CORRECT)
                positionHints.set(idx, letter)
          })
@@ -91,29 +98,14 @@ function App() {
       return [letterHints, positionHints]
    }, [guesses])
 
-   // use counter as mutex to prevent multiple simultaneous API calls
-   // (e.g. without this we may allow user to submit multiple guesses before 
-   // get a single response)
-   // this could be a custom hook useRefCounter
-   const apiCallCounterRef = useRef(0)
-   const incrementCounter = () => { apiCallCounterRef.current += 1 }
-   const decrementCounter = () => { apiCallCounterRef.current -= 1 }
-   const getApiCallCount = () => apiCallCounterRef.current
-
-   // Start new game immediately on mount if no game in progress
-   useEffect(() => {
-      if (!gameInfo)
-         resetNewGame()
-      // ^ should not run more than once per game since our only dependency (newGame) is constant
-   }, [gameInfo, resetNewGame])
 
    let isGameOver = answer !== null
 
    const handleSubmitGuess = useCallback((buffer: string) => {
       (async function () {
-         if (!gameInfo) return
+         if (!gameIdKeys) return
          if (mutex.isLocked()) {
-            console.warn("Submission Blocked")
+            console.warn("A submission is already in progress. Blocking...")
             return // block submissions when one is already in progress
          }
 
@@ -130,8 +122,8 @@ function App() {
 
          mutex.runProtected(async () => {
             const guessResponse = await api.guess({
-               id: gameInfo.id,
-               key: gameInfo.key,
+               id: gameIdKeys.id,
+               key: gameIdKeys.key,
                guess: buffer
             })
             if (guessResponse === ResponseError.INVALID_WORD) {
@@ -140,27 +132,27 @@ function App() {
             } else if (guessResponse === ResponseError.GAME_OVER) {
                toast.error("Game Already Over")
                // override game over state
-               setLocalAnswer("BUGBUG");
+               setAnswers("BUGBUG");
                return
             }
 
             // clear buffer after each guess
             setBuffer("")
 
-            setLocalGuesses((guesses) => [...guesses, guessResponse]);
+            setGuesses((guesses) => [...guesses, guessResponse]);
 
             // Is the game over?
             if (isWinningGuess(guessResponse)) {
-               setLocalAnswer(guessResponse.map(({ letter }) => letter).join(""))
+               setAnswers(guessResponse.map(({ letter }) => letter).join(""))
             }
             else if (guesses.length === 5) {
                // out of guesses; fetch answer
-               const { answer } = await api.finishGame({ id: gameInfo.id, key: gameInfo.key })
-               setLocalAnswer(answer)
+               const { answer } = await api.finishGame({ id: gameIdKeys.id, key: gameIdKeys.key })
+               setAnswers(answer)
             }
          })
       })()
-   }, [gameKeys, guesses.length, isHardMode, letterHints, mutex, positionHints, setAnswers, setGuesses])
+   }, [gameIdKeys, guesses.length, isHardMode, letterHints, mutex, positionHints, setAnswers, setGuesses])
 
    const handleKeydown = useCallback((event) => {
       if (isGameOver) {
@@ -182,9 +174,9 @@ function App() {
 
    useGlobalKeyHandler(handleKeydown)
 
-   return renderWhen(gameInfo,
+   return renderWhen(gameIdKeys,
       (<div className="App">
-         <Title>Wordeau #{gameInfo?.id}</Title>
+         <Title>Wordeau #{gameIdKeys?.id}</Title>
          <DifficultySelection {...{ isHardMode, setIsHardMode }} />
          <GuessBoard {...{ guesses, buffer }} />
          <KeyboardHints {...{ letterHints }} />

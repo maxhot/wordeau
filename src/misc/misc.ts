@@ -1,6 +1,5 @@
 import { ReactElement } from "react"
-import { LetterGuess, LetterState } from "../api"
-import { HintsByLetter, HintsByCorrectPosition } from "../App"
+import { HintsByCorrectPosition, HintsByLetter, LetterGuess, LetterState } from "./types"
 
 export function renderWhen(condition: unknown, component: ReactElement) {
    return Boolean(condition) ? component : null
