@@ -1,6 +1,7 @@
 import styled from 'styled-components'
 import { LetterGuess } from '../misc/types'
-import { KeyRow, LetterTile } from './KeyboardHints'
+import { KeyRow } from './KeyboardHints'
+import { LetterTile } from './LetterTile'
 
 // Empty 6 x 5 tiles
 const emptyBoard = Array(6).fill(null).map(row => Array(5).fill(null))
@@ -10,7 +11,7 @@ const Wrapper = styled.div`
    flex-direction: column;
    align-items: center;
    gap: .5rem; 
-   margin: 2rem 0;
+   margin: 1.5rem 0;
 `
 function GuessBoard({ guesses, buffer }: {
    guesses: LetterGuess[][], buffer: string

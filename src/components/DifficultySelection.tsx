@@ -4,7 +4,7 @@ import styled from "styled-components";
 
 const DifficultySelect = styled.select`
    min-height: 40;
-   font-size: larger;
+   font-size: large;
    padding: .25rem .5rem;
    margin: 0 .5rem;
 `

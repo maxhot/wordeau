@@ -1,39 +1,8 @@
 import React from 'react'
 import styled from 'styled-components';
 
-import { HintsByLetter, LetterState } from '../misc/types';
-
-export function state2cssColor(state: LetterState | null): string {
-   switch (state) {
-      case LetterState.ABSENT:
-         return "grey";
-      case LetterState.PRESENT:
-         return "goldenrod";
-      case LetterState.CORRECT:
-         return "lightgreen";
-      default:
-         return "inherit"
-   }
-}
-
-export const LetterTile = React.memo(styled.article`
-   box-sizing: border-box;
-   display: grid;
-   place-items: center;
-
-   font-weight: bold;
-   font-size: xx-large;
-   background-color: ${(props: { state: LetterState | null }) => state2cssColor(props.state)};
-
-   border: 1px solid lightgrey;
-   border-radius: .25rem;
-
-   min-width: 3rem;
-   min-height: 3rem;
-   color: hsl(0, 0%, 30%);
-
-   user-select: none;   /* don't let user select letters */
-`)
+import { HintsByLetter } from '../misc/types';
+import { LetterTile } from './LetterTile';
 
 export const KeyRow = React.memo(styled.div`
    display: flex;
