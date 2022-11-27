@@ -17,10 +17,14 @@ import { useMutex } from './misc/useMutex';
 import { GameIdKeys, HintsByCorrectPosition, HintsByLetter, LetterGuess, LetterState, ResponseError } from './misc/types';
 import { GameInfoSource, TitleCard } from './components/TitleCard';
 
-const VERSION = "0.1.3"
 const WORD_LEN = 5;
-// local storage key
+
+// Use local storage save game state between sessions
+const VERSION = "0.1.3"
 const STORAGE_KEY = `wordeau--${VERSION}`
+function localKey(key: string) {
+   return `${STORAGE_KEY}:${key}`
+}
 
 const GlobalStyles = createGlobalStyle`
    body {
@@ -29,13 +33,6 @@ const GlobalStyles = createGlobalStyle`
       text-align: center;
    }
 `
-const Title = styled.h1`
-   color: hsl(0, 0%, 20%);
-`
-
-function localKey(key: string) {
-   return `${STORAGE_KEY}:${key}`
-}
 
 /**
  * Wordeau Game Main app
@@ -51,6 +48,8 @@ function App() {
    const [gameSource, setGameSource] = useState<GameInfoSource>('localStorage')
    const [buffer, setBuffer] = useState("");
    // Prevent multiple simultaneous API calls with a semaphore
+   const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
+   const [isInvalidGuess, setIsInvalidGuess] = useState<boolean>(false)
    const mutex = useMutex()
 
    // Resets game state and starts a new game
@@ -119,39 +118,49 @@ function App() {
                toast.error(`Missing Letters: (${missingLetters.join(", ")})`, {
                   autoClose: 3000,
                })
+               setIsInvalidGuess(true)
                return
             }
          }
 
          mutex.runProtected(async () => {
-            const guessResponse = await api.guess({
-               id: gameIdKeys.id,
-               key: gameIdKeys.key,
-               guess: buffer
-            })
-            if (guessResponse === ResponseError.INVALID_WORD) {
-               toast.error("Invalid Word!")
-               return
-            } else if (guessResponse === ResponseError.GAME_OVER) {
-               toast.error("Game Already Over")
-               // override game over state
-               setAnswers("BUGBUG");
-               return
-            }
+            setIsSubmitting(true)
+            try {
+               const guessResponse = await api.guess({
+                  id: gameIdKeys.id,
+                  key: gameIdKeys.key,
+                  guess: buffer
+               })
+               if (guessResponse === ResponseError.INVALID_WORD) {
+                  toast.error("Invalid Word!")
+                  setIsInvalidGuess(true)
+                  return
+               } else if (guessResponse === ResponseError.GAME_OVER) {
+                  toast.error("Game Already Over")
+                  // override game over state
+                  setAnswers("BUGBUG");
+                  return
+               }
 
-            // clear buffer after each guess
-            setBuffer("")
+               // clear buffer after each guess
+               setBuffer("")
 
-            setGuesses((guesses) => [...guesses, guessResponse]);
+               // update guess board with results
+               setGuesses((guesses) => [...guesses, guessResponse]);
 
-            // Is the game over?
-            if (isWinningGuess(guessResponse)) {
-               setAnswers(guessResponse.map(({ letter }) => letter).join(""))
-            }
-            else if (guesses.length === 5) {
-               // out of guesses; fetch answer
-               const { answer } = await api.finishGame({ id: gameIdKeys.id, key: gameIdKeys.key })
-               setAnswers(answer)
+               // Is the game over?
+               if (isWinningGuess(guessResponse)) {
+                  const wordGuessed = guessResponse.map(({ letter }) => letter).join("")
+                  setAnswers(wordGuessed)
+               }
+               else if (guesses.length === 5) {
+
+                  // out of guesses; fetch answer
+                  const { answer } = await api.finishGame({ id: gameIdKeys.id, key: gameIdKeys.key })
+                  setAnswers(answer)
+               }
+            } finally {
+               setIsSubmitting(false);
             }
          })
       })()
@@ -169,6 +178,7 @@ function App() {
       }
       else if (event.key === "Backspace" && buffer.length > 0) {
          setBuffer((buffer) => buffer.slice(0, -1));
+         setIsInvalidGuess(false)
       }
       else if (event.key >= "a" && event.key <= "z" && buffer.length < WORD_LEN) {
          setBuffer((buffer) => buffer + event.key);
@@ -181,7 +191,7 @@ function App() {
       (<div className="App">
          <TitleCard {...{ id: gameIdKeys?.id || 0, source: gameSource }} />
          <DifficultySelection {...{ isHardMode, setIsHardMode }} />
-         <GuessBoard {...{ guesses, buffer }} />
+         <GuessBoard {...{ guesses, buffer, isSubmitting, isInvalidGuess }} />
          <KeyboardHints {...{ letterHints }} />
          {renderWhen(isGameOver,
             (<GameOverModal {...{ newGame: resetNewGame, answer }} />)

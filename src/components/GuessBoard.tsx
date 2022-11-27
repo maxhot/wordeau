@@ -13,8 +13,11 @@ const Wrapper = styled.div`
    gap: .5rem; 
    margin: 1.5rem 0;
 `
-function GuessBoard({ guesses, buffer }: {
-   guesses: LetterGuess[][], buffer: string
+function GuessBoard({ guesses, buffer, isSubmitting, isInvalidGuess }: {
+   guesses: LetterGuess[][],
+   buffer: string,
+   isSubmitting: boolean,
+   isInvalidGuess?: boolean,
 }) {
    return <Wrapper>{
       emptyBoard.map((rowTiles, rowIdx) => {
@@ -23,14 +26,25 @@ function GuessBoard({ guesses, buffer }: {
                if (rowIdx < guesses.length) { // render previous guess
                   const letterGuess = guesses[rowIdx][j]
                   return (
-                     <LetterTile key={j} state={letterGuess.state} >
+                     <LetterTile key={j}
+                        state={letterGuess.state}
+                     >
                         {letterGuess.letter}
                      </LetterTile>
                   )
-               } else if (rowIdx === guesses.length) { // render current buffer
+               } else if (rowIdx === guesses.length) { // render current guess buffer
                   const letter = buffer[j]
+
+                  // stagger "bounce of each letter" when we're guessing
+                  const animationDelay = (j * .25) + 's'
                   return (
-                     <LetterTile key={j} state={null}>
+                     <LetterTile key={j} state={null}
+                        isSubmitting={isSubmitting}
+                        animationDelay={animationDelay}
+                        isInvalid={isInvalidGuess}
+                        // outline current letter or last letter
+                        focus={j === buffer.length || (j === 4 && buffer.length === 5)}
+                     >
                         {letter ?? ""}
                      </LetterTile>
                   )

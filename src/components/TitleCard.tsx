@@ -5,12 +5,12 @@ export type GameInfoSource = 'localStorage' | 'newGame'
 const Title = styled.h1`
    color: hsl(0, 0%, 20%);
 `
-
 const StyledGameId = styled.span<{ source: GameInfoSource }>`
    display: inline-block;
-	${props => props.source === 'localStorage'
-      ? css`animation: scale-in-hor-center 0.5s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;`
-      : css`animation: rollInBlurredBottom 0.6s cubic-bezier(0.230, 1.000, 0.320, 1.000) both;`
+   /* display: block; */
+	${props => props.source === 'newGame'
+      ? css`animation: rollInBlurredBottom 0.6s cubic-bezier(0.230, 1.000, 0.320, 1.000) both;`
+      : css`animation: roll-in-blurred-left 0.65s cubic-bezier(0.230, 1.000, 0.320, 1.000) both;`
    }
 
    /* ----------------------------------------------
@@ -19,35 +19,41 @@ const StyledGameId = styled.span<{ source: GameInfoSource }>`
    * See http://animista.net/license for more info. 
    * w: http://animista.net, t: @cssanimista
    * ---------------------------------------------- */
-   @keyframes rollInBlurredBottom {
+
+   @keyframes roll-in-blurred-left {
       0% {
-      transform: translateY(800px) rotate(720deg);
-      filter: blur(50px);
-      opacity: 0;
+         transform: translateX(-1000px) rotate(-720deg);
+         filter: blur(50px);
+         opacity: 0;
       }
       100% {
-      transform: translateY(0) rotate(0deg);
-      opacity: 1;
+         transform: translateX(0) rotate(0deg);
+         filter: blur(0);
+         opacity: 1;
       }
    }
-
-   @keyframes scale-in-hor-center {
-   0% {
-      transform: scaleX(0);
-      opacity: 1;
-   }
-   100% {
-      transform: scaleX(1);
-      opacity: 1;
-   }
+   @keyframes rollInBlurredBottom {
+      0% {
+         transform: translateY(800px) rotate(720deg);
+         filter: blur(50px);
+         opacity: 0;
+      }
+      100% {
+         transform: translateY(0) rotate(0deg);
+         opacity: 1;
+      }
    }
 `
 
 
 export function TitleCard({ id, source = 'newGame' }: { id: number, source: GameInfoSource }) {
-
    return (
-      <Title>Wordeau <StyledGameId {...{ source }}>#{id}</StyledGameId></Title>
+      <Title>
+         Wordeau
+         <StyledGameId className={"gameId-" + id} {...{ source }}>
+            #{id}
+         </StyledGameId>
+      </Title>
    )
 
 }
