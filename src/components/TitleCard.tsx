@@ -5,7 +5,8 @@ export type GameInfoSource = 'localStorage' | 'newGame'
 const Title = styled.h1`
    color: hsl(0, 0%, 20%);
 `
-const StyledGameId = styled.span<{ source: GameInfoSource }>`
+
+const AnimatedGameId = styled.span<{ source: GameInfoSource }>`
    display: inline-block;
    /* display: block; */
 	${props => props.source === 'newGame'
@@ -45,15 +46,16 @@ const StyledGameId = styled.span<{ source: GameInfoSource }>`
    }
 `
 
-
 export function TitleCard({ id, source = 'newGame' }: { id: number, source: GameInfoSource }) {
+
    return (
       <Title>
          Wordeau
-         <StyledGameId className={"gameId-" + id} {...{ source }}>
+         &nbsp;
+         {/* Change key on each new game to force remount in order to re-trigger the animation */}
+         <AnimatedGameId {...{ source }} key={id}>
             #{id}
-         </StyledGameId>
+         </AnimatedGameId>
       </Title>
    )
-
 }
