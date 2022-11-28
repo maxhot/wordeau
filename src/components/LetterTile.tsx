@@ -52,7 +52,8 @@ export const LetterTile = styled.article<TileProps>`
 
    user-select: none;   /* don't let user select letters */
    ${(props) => props.isInvalid ? css`
-      opacity: 70%;
+      /* TODO: find a better way to indicate invalid word guess */
+      /* opacity: 70%; */
    `: ''
    }
    ${(props) => props.isSubmitting ?
