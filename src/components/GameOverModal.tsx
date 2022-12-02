@@ -56,6 +56,10 @@ const Answer = styled.span`
    color: green;
 `
 
+const LighterText = styled.span`
+   opacity: 40%;
+`
+
 export default function GameOverModal({ newGame, answer = (required() as any) }: {
    newGame: () => void
    answer: string | null
@@ -64,8 +68,11 @@ export default function GameOverModal({ newGame, answer = (required() as any) }:
       <ModalPane>
          <h1>Game Over</h1>
 
-         <h2>Answer: <Answer>{answer || 'Unknown'}</Answer></h2>
-         <Button onClick={() => newGame()}>New Game [Enter]</Button>
+         <h2>Answer: <Answer>{answer}</Answer></h2>
+         <h3>
+            <a href={`https://duckduckgo.com/?q=define+${answer}`}>Learn more about "<Answer>{answer}</Answer>"</a>
+         </h3>
+         <Button onClick={() => newGame()}>New Game <LighterText>[Enter]</LighterText></Button>
       </ModalPane>
    </Wrapper>
 }
