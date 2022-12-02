@@ -10,8 +10,17 @@ const AnimatedGameId = styled.span<{ source: GameInfoSource }>`
    display: inline-block;
    /* display: block; */
 	${props => props.source === 'newGame'
+      // New games roll up from the bottom:
       ? css`animation: rollInBlurredBottom 0.6s cubic-bezier(0.230, 1.000, 0.320, 1.000) both;`
-      : css`animation: roll-in-blurred-left 0.65s cubic-bezier(0.230, 1.000, 0.320, 1.000) both;`
+
+      // Loading in-progress games  (from save state) drops from the top:
+      : css`animation: roll-in-blurred-top 0.6s cubic-bezier(0.230, 1.000, 0.320, 1.000) both;`
+
+   // Alternatives:
+   // : css`animation: fade-in-fwd 1.3s cubic-bezier(0.390, 0.575, 0.565, 1.000) both;`
+   // : css`animation: bounce-in-fwd 1.1s both;`
+   // : css`animation: fade-in-bottom 0.6s cubic-bezier(0.390, 0.575, 0.565, 1.000) both;`
+   // : css`animation: roll-in-blurred-left 0.65s cubic-bezier(0.230, 1.000, 0.320, 1.000) both;`
    }
 
    /* ----------------------------------------------
@@ -21,6 +30,23 @@ const AnimatedGameId = styled.span<{ source: GameInfoSource }>`
    * w: http://animista.net, t: @cssanimista
    * ---------------------------------------------- */
 
+   /**
+   * ----------------------------------------
+   * animation roll-in-blurred-top
+   * ----------------------------------------
+   */
+   @keyframes roll-in-blurred-top {
+      0% {
+         transform: translateY(-800px) rotate(-720deg);
+         filter: blur(50px);
+         opacity: 0;
+      }
+      100% {
+         transform: translateY(0) rotate(0deg);
+         filter: blur(0);
+         opacity: 1;
+      }
+   }
    @keyframes roll-in-blurred-left {
       0% {
          transform: translateX(-1000px) rotate(-720deg);
@@ -44,6 +70,82 @@ const AnimatedGameId = styled.span<{ source: GameInfoSource }>`
          opacity: 1;
       }
    }
+
+   /**
+   * ----------------------------------------
+   * animation fade-in-fwd
+   * ----------------------------------------
+   */
+   @keyframes fade-in-fwd {
+      0% {
+         transform: translateZ(-180px);
+         opacity: 0;
+      }
+      100% {
+         transform: translateZ(0);
+         opacity: 1;
+      }
+   }
+
+   /**
+   * ----------------------------------------
+   * animation fade-in-bottom
+   * ----------------------------------------
+   */
+   @keyframes fade-in-bottom {
+      0% {
+         transform: translateY(50px);
+         opacity: 0;
+      }
+      100% {
+         transform: translateY(0);
+         opacity: 1;
+      }
+   }
+
+
+   /**
+   * ----------------------------------------
+   * animation bounce-in-fwd
+   * ----------------------------------------
+   */
+   @keyframes bounce-in-fwd {
+      0% {
+         transform: scale(0);
+         animation-timing-function: ease-in;
+         opacity: 0;
+      }
+      38% {
+         transform: scale(1);
+         animation-timing-function: ease-out;
+         opacity: 1;
+      }
+      55% {
+         transform: scale(0.7);
+         animation-timing-function: ease-in;
+      }
+      72% {
+         transform: scale(1);
+         animation-timing-function: ease-out;
+      }
+      81% {
+         transform: scale(0.84);
+         animation-timing-function: ease-in;
+      }
+      89% {
+         transform: scale(1);
+         animation-timing-function: ease-out;
+      }
+      95% {
+         transform: scale(0.95);
+         animation-timing-function: ease-in;
+      }
+      100% {
+         transform: scale(1);
+         animation-timing-function: ease-out;
+      }
+   }
+
 `
 
 export function TitleCard({ id, source = 'newGame' }: { id: number, source: GameInfoSource }) {
