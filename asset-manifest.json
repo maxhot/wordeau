@@ -1,15 +1,15 @@
 {
   "files": {
     "main.css": "/wordeau/static/css/main.d5e10576.css",
-    "main.js": "/wordeau/static/js/main.a311c8f0.js",
+    "main.js": "/wordeau/static/js/main.ab86afe2.js",
     "static/js/787.c14d2ede.chunk.js": "/wordeau/static/js/787.c14d2ede.chunk.js",
     "index.html": "/wordeau/index.html",
     "main.d5e10576.css.map": "/wordeau/static/css/main.d5e10576.css.map",
-    "main.a311c8f0.js.map": "/wordeau/static/js/main.a311c8f0.js.map",
+    "main.ab86afe2.js.map": "/wordeau/static/js/main.ab86afe2.js.map",
     "787.c14d2ede.chunk.js.map": "/wordeau/static/js/787.c14d2ede.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.d5e10576.css",
-    "static/js/main.a311c8f0.js"
+    "static/js/main.ab86afe2.js"
   ]
 }
