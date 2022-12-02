@@ -166,24 +166,35 @@ function App() {
       })()
    }, [gameIdKeys, guesses.length, isHardMode, letterHints, mutex, positionHints, setAnswers, setGuesses])
 
-   const handleKeydown = useCallback((event) => {
+   const handleKey = useCallback((key: string) => {
+      // Starts new game after game over
       if (isGameOver) {
-         if (event.key === 'Enter') {
+         if (key === 'Enter') {
             resetNewGame();
          }
          return;
       }
-      else if (event.key === "Enter" && buffer.length === WORD_LEN) {
+      // Submit buffer
+      else if (key === "Enter" && buffer.length === WORD_LEN) {
          handleSubmitGuess(buffer);
       }
-      else if (event.key === "Backspace" && buffer.length > 0) {
+      // Edit buffer
+      else if (key === "Backspace" && buffer.length > 0) {
          setBuffer((buffer) => buffer.slice(0, -1));
          setIsInvalidGuess(false)
       }
-      else if (event.key >= "a" && event.key <= "z" && buffer.length < WORD_LEN) {
-         setBuffer((buffer) => buffer + event.key);
+      else if (key >= "a" && key <= "z" && buffer.length < WORD_LEN) {
+         setBuffer((buffer) => buffer + key);
       }
-   }, [isGameOver, buffer, handleSubmitGuess, resetNewGame])
+      else { // ignore all other keys
+
+      }
+   }, [isGameOver, buffer, resetNewGame, handleSubmitGuess])
+
+   // Handle keyboard event
+   const handleKeydown = useCallback((event) => {
+      return handleKey(event.key)
+   }, [handleKey])
 
    useGlobalKeyHandler(handleKeydown)
 
@@ -192,7 +203,7 @@ function App() {
          <TitleCard {...{ id: gameIdKeys?.id || 0, source: gameSource }} />
          <DifficultySelection {...{ isHardMode, setIsHardMode }} />
          <GuessBoard {...{ guesses, buffer, isSubmitting, isInvalidGuess }} />
-         <KeyboardHints {...{ letterHints }} />
+         <KeyboardHints {...{ letterHints, handleKey }} />
          {renderWhen(isGameOver,
             (<GameOverModal {...{ newGame: resetNewGame, answer }} />)
          )}

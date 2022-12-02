@@ -19,8 +19,9 @@ gap: .5rem;
 
 const keyboardLetterRows: string[][] = ["qwertyuiop", "asdfghjkl", "zxcvbnm"].map(letters => letters.split(""))
 
-function KeyboardHints({ letterHints }: {
+function KeyboardHints({ letterHints, handleKey }: {
    letterHints: HintsByLetter,
+   handleKey: (string) => void,
 }) {
    return <Wrapper>{
       keyboardLetterRows.map((letters: string[], i) => (
@@ -28,7 +29,9 @@ function KeyboardHints({ letterHints }: {
             {letters.map((letter: string, j) => (
 
                // while it's usually frowned upon to use index number as key, in this case we know the index is guaranteed to be unique because the keyboard is hard-coded and fixed 
-               <LetterTile key={j} state={letterHints.get(letter) ?? null}
+               <LetterTile
+                  key={j} state={letterHints.get(letter) ?? null}
+                  onClick={() => handleKey(letter)}
                   size="m"
                > {letter} </LetterTile>
             ))}
