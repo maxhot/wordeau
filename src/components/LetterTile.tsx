@@ -18,9 +18,10 @@ interface TileProps {
    state: LetterState | null,
    isSubmitting?: boolean,
    animationDelay?: string,
-   isInvalid?: boolean,       // is this part of an word deemed invalid (not a real word)
    size?: 'm' | 'l',
    focus?: boolean,           // is this letter being focused?
+   wider?: boolean,       // extra padding for wide keys like 'Enter'
+   disabled?: boolean
 }
 
 export const LetterTile = styled.article<TileProps>`
@@ -35,14 +36,22 @@ export const LetterTile = styled.article<TileProps>`
       outline: 2px solid hsl(0deg, 0%, 50%);
    ` : ""
    }
+   // Support different tile sizes
    ${(props => props.size === 'm'
       ? css`
-      min-width: 2.5rem;
-      min-height: 2.5rem;`
+         min-width: 2.5rem;
+         min-height: 2.5rem;
+      `
       : css`
-      min-width: 3rem;
-      min-height: 3rem;`
+         min-width: 3rem;
+         min-height: 3rem;
+      `
    )}
+
+   // Extra padding for 'Enter' key
+   ${(props => props.wider ? css`
+      padding: 0 .5rem;
+   `: "")}
 
    color: hsl(0, 0%, 30%);
    background-color: ${(props) => state2cssColor(props.state)};
@@ -51,11 +60,10 @@ export const LetterTile = styled.article<TileProps>`
    border-radius: .25rem;
 
    user-select: none;   /* don't let user select letters */
-   ${(props) => props.isInvalid ? css`
-      /* TODO: find a better way to indicate invalid word guess */
-      /* opacity: 70%; */
-   `: ''
-   }
+   ${(props) => props.disabled ? css`
+      opacity: 50%;
+   `: ""}
+
    ${(props) => props.isSubmitting ?
       css`
          opacity: 50%;

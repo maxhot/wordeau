@@ -41,7 +41,6 @@ function GuessBoard({ guesses, buffer, isSubmitting, isInvalidGuess }: {
                      <LetterTile key={j} state={null}
                         isSubmitting={isSubmitting}
                         animationDelay={animationDelay}
-                        isInvalid={isInvalidGuess}
                         // outline current letter or last letter
                         focus={j === buffer.length || (j === 4 && buffer.length === 5)}
                      >

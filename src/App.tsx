@@ -203,7 +203,7 @@ function App() {
          <TitleCard {...{ id: gameIdKeys?.id || 0, source: gameSource }} />
          <DifficultySelection {...{ isHardMode, setIsHardMode }} />
          <GuessBoard {...{ guesses, buffer, isSubmitting, isInvalidGuess }} />
-         <KeyboardHints {...{ letterHints, handleKey }} />
+         <KeyboardHints {...{ buffer, letterHints, handleKey }} />
          {renderWhen(isGameOver,
             (<GameOverModal {...{ newGame: resetNewGame, answer }} />)
          )}
